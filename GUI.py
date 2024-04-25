@@ -2,9 +2,10 @@ import tkinter as tk
 from tkinter import  filedialog
 import tkinter.ttk as ttk
 from PIL import Image, ImageTk
-
+from client import *
 
 def open_file_dialog():
+    global file_path
     file_path = filedialog.askopenfilename(title="Select a Photo", filetypes=[("Image Files", "*.png; *.jpg; *.jpeg")])
     if file_path:
         global uploaded_image
@@ -24,7 +25,7 @@ def display_image(image):
 def apply_operation(image, operation):
     if operation == "None":
         return image
-    elif operation == "Grayscale":
+    elif operation == "gray":
         return image.convert("L")
     elif operation == "Rotate 90°":
         return image.rotate(90)
@@ -34,6 +35,7 @@ def apply_operation_and_display():
     operation = selected_operation.get()
     if uploaded_image:
         global modified_image
+        send_image(operation,file_path)
         modified_image = apply_operation(uploaded_image, operation)
         display_image(modified_image)
         save_button.pack(pady=5)
@@ -58,7 +60,7 @@ operation_frame = ttk.Frame(root)
 operation_label = ttk.Label(operation_frame, text="Operation:")
 operation_label.pack(side="left", padx=10, pady=5)
 
-operations = ["None", "Grayscale", "Rotate 90°"]
+operations = ["None", "GrayScale","Invert", "Rotate 90°"]
 selected_operation = tk.StringVar(root)
 selected_operation.set(operations[0])
 operation_menu = ttk.OptionMenu(operation_frame, selected_operation, *operations)
