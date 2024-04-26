@@ -7,7 +7,6 @@ def blur(img):
  blurred = cv2.GaussianBlur(img, (3, 3), 0)
  return blurred
 
-
 #removing image color function
 def gray(img):
  gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -22,13 +21,19 @@ def apply_median_filter(image, kernel_size=7):
 # Apply median filter to the image
  return cv2.medianBlur(image, kernel_size)
 
-
 #invertion function
 def invert_photo(image):
  inverted_image = cv2.bitwise_not(image)
  return inverted_image
 
-
+def incerase_brightness(image):
+    img_float = image.astype(float)
+    
+    brightened_img = cv2.multiply(img_float, 1.3)
+    
+    brightened_img = brightened_img.astype('uint8')
+    
+    return brightened_img
 
 #check and adjust contrast function
 def check_and_adjust_contrast(image):

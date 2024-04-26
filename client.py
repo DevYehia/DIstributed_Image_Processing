@@ -1,21 +1,39 @@
 
 import os
 import socket
-
-
-
+from PIL import Image
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+connected = False
 # Specify the operation and image file details
-def send_image(operation,image_path):
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect(("13.51.158.159", 1234))
+def send_and_recieve_image(operation,image_path):
+    global connected
+    if not connected:
+        connected = True
+        client.connect(("13.51.158.159", 1234))
     image_name = image_path.split("/")[-1]
-    # Send operation, image name, and file size to the server
-    client.send(operation.encode("utf-8")+";".encode()+image_name.encode("utf-8")+";".encode())
-    client.recv(1)
 
+    file_size = os.path.getsize(image_path)
+    # Send operation, image name, and file size to the server
+    
+    client.send(operation.encode("utf-8")+
+                ";".encode()+image_name.encode("utf-8")+
+                ";".encode()+str(file_size).encode("utf-8")+";".encode())
+    print("Sent Data")
+    client.recv(1)
+    print("Recieved ACK")
     # Send the image data to the server
     with open(image_path, "rb") as file:
         data = file.read()
         client.sendall(data)
 
-    client.close()
+    img = open("new" + image_name,"wb")
+    new_img_size = int.from_bytes(client.recv(4),'big')
+    print("New Size is",new_img_size)
+    img_data = b""
+    while new_img_size:
+        data = client.recv(min(4096,new_img_size))
+        new_img_size -= len(data)
+        img_data += data
+    img.write(img_data)
+    img.close()
+    return Image.open("new" + image_name)

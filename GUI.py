@@ -35,8 +35,7 @@ def apply_operation_and_display():
     operation = selected_operation.get()
     if uploaded_image:
         global modified_image
-        send_image(operation,file_path)
-        modified_image = apply_operation(uploaded_image, operation)
+        modified_image = send_and_recieve_image(operation,file_path)
         display_image(modified_image)
         save_button.pack(pady=5)
 
@@ -60,7 +59,7 @@ operation_frame = ttk.Frame(root)
 operation_label = ttk.Label(operation_frame, text="Operation:")
 operation_label.pack(side="left", padx=10, pady=5)
 
-operations = ["None", "GrayScale","Invert", "Rotate 90°", ""]
+operations = ["None", "GrayScale","Invert", "Rotate 90°", "Blur", "Increase Brightness"]
 selected_operation = tk.StringVar(root)
 selected_operation.set(operations[0])
 operation_menu = ttk.OptionMenu(operation_frame, selected_operation, *operations)
