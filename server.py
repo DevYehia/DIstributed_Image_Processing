@@ -42,8 +42,8 @@ while True:
     org_img = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
 
 
-    if operation == "Blur":
-        new_img = blur(org_img)
+    if operation == "Edge Detection":
+        new_img = edges(org_img)
     elif operation == "GrayScale":
         new_img = gray(org_img)
     elif operation == "Invert":  

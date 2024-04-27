@@ -59,7 +59,7 @@ operation_frame = ttk.Frame(root)
 operation_label = ttk.Label(operation_frame, text="Operation:")
 operation_label.pack(side="left", padx=10, pady=5)
 
-operations = ["None", "GrayScale","Invert", "Rotate 90°", "Blur", "Increase Brightness"]
+operations = ["None", "GrayScale","Invert", "Rotate 90°", "Edge Detection", "Increase Brightness"]
 selected_operation = tk.StringVar(root)
 selected_operation.set(operations[0])
 operation_menu = ttk.OptionMenu(operation_frame, selected_operation, *operations)
