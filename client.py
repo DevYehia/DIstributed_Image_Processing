@@ -9,7 +9,7 @@ def send_and_recieve_image(operation,image_path):
     global connected
     if not connected:
         connected = True
-        client.connect(("13.51.158.159", 1234))
+        client.connect(("51.20.85.5", 1234))
     image_name = image_path.split("/")[-1]
 
     file_size = os.path.getsize(image_path)

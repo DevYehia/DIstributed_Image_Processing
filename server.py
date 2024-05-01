@@ -30,11 +30,11 @@ def handle_client(client_socket, client_addr):
         comm.bcast(img_data, root=0)
         
         # Each process handles the client payload
-        handle_client_payload(payload)
+        handle_client_payload(payload, img_data)
 
     client_socket.close()
 
-def handle_client_payload(payload):
+def handle_client_payload(payload, img_data):
     operation = payload.split(";")[0]
     img_name = payload.split(";")[1]
     img_size = int(payload.split(";")[2])
