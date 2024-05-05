@@ -4,12 +4,29 @@ import socket
 from PIL import Image
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 connected = False
-# Specify the operation and image file details
-def send_and_recieve_image(operation,image_path):
+
+
+def connectToLB():
     global connected
     if not connected:
         connected = True
-        client.connect(("13.51.158.159", 1234))
+        client.connect(("51.20.85.5", 1234))   
+
+def send_images_number(imagesNo):
+    client.send(imagesNo)
+    client.recv(1)
+
+def applyImageOp(imagesNo,img_paths,operation):
+    connectToLB()
+    send_images_number(imagesNo)
+    images = []
+    for i in range(imagesNo):
+        images.append(send_and_recieve_image())
+    return images
+
+# Specify the operation and image file details
+def send_and_recieve_image(operation,image_path):
+
     image_name = image_path.split("/")[-1]
 
     file_size = os.path.getsize(image_path)

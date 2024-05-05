@@ -50,8 +50,7 @@ while True:
         new_img = invert_photo(org_img)
     elif operation == "Rotate 90°":
         new_img = rotate(org_img)
-    elif operation == "Increase Brightness":
-        new_img = incerase_brightness(org_img)
+
 
     cv2.imwrite("new" + img_name, new_img)
     new_img_length = os.path.getsize("new"+img_name) #len(open("new"+img_name).read())
