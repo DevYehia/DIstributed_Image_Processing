@@ -10,7 +10,7 @@ def connectToLB():
     global connected
     if not connected:
         connected = True
-        client.connect(("13.53.130.106", 1237))   
+        client.connect(("13.60.84.107", 1237))   
 
 def send_images_number(imagesNo):
     client.send(str(imagesNo).encode())
@@ -64,7 +64,7 @@ def recv_image(image_name):
         img_data += data
     img.write(img_data)
     img.close()
-    return Image.open("new" + image_name)
+    return "new" + image_name
 
 if __name__ == '__main__':
     op = "Invert"
