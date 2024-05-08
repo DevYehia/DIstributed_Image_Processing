@@ -1,65 +1,141 @@
 import tkinter as tk
-from tkinter import  filedialog
-import tkinter.ttk as ttk
+from tkinter import filedialog
+from tkinter import ttk
 from PIL import Image, ImageTk
-from client import *
+
 
 def open_file_dialog():
-    global file_path
-    file_path = filedialog.askopenfilename(title="Select a Photo", filetypes=[("Image Files", "*.png; *.jpg; *.jpeg")])
-    if file_path:
-        global uploaded_image
-        uploaded_image = Image.open(file_path)
-        display_image(uploaded_image)
-        operation_frame.pack(pady=5)
-        apply_button.pack(pady=5)
+    file_paths = filedialog.askopenfilenames(title="Select Photos", filetypes=[("Image Files", "*.png; *.jpg; *.jpeg")])
+    if file_paths:
+        global uploaded_images
+        uploaded_images = file_paths
+        # for file_path in file_paths:
+        #     image = Image.open(file_path)
+        #     display_image(image)
+        #     print(file_path.split("/")[-1])
+        display_images()
+
+        # operation_frame.pack(pady=5)
+        # apply_button.pack(pady=5)
 
 
-def display_image(image):
-    image.thumbnail((350, 350))
-    photo = ImageTk.PhotoImage(image)
-    image_label.config(image=photo)
-    image_label.image = photo
+server_images=[]
+finished = False
+
+for image_path, row_widgets in zip(widgets, server_images):
+    row_widgets[-1].configure(command=lambda f=image_path: display_image(f))
+
+
+def display_image(image_path):
+    if finished:
+        image = Image.open(f"new{image_path.split('/')[-1]}")
+        image.thumbnail((350, 350))
+        photo = ImageTk.PhotoImage(image)
+        image_label.config(image=photo)
+        image_label.image = photo
+    else:
+        image = Image.open(image_path)
+        image.thumbnail((350, 350))
+        photo = ImageTk.PhotoImage(image)
+        image_label.config(image=photo)
+        image_label.image = photo
+
+
+# def display_images():
+#     global widgets
+#     widgets = []
+#
+#     frames = [ttk.Frame(root) for _ in range(len(uploaded_images))]
+#     for frame in frames:
+#         print(frame)
+#         # frame.pack_propagate(False)
+#         frame.pack()
+#     for i, file_path in enumerate(uploaded_images):
+#         row_widgets = [
+#             ttk.Label(frames[i], text=f'{i+1}- {file_path.split("/")[-1]}'),
+#             ttk.Label(frames[i], text=file_path.split('/')[-1]),
+#             ttk.Button(frames[i], text="Preview Image", command=lambda f=file_path: display_image(f)),
+#             ]
+#         widgets.append(row_widgets)
+#
+#     for row_widgets in widgets:
+#         for widget in row_widgets:
+#             widget.pack(side='left', padx=5, pady=5)
+
+
+def display_images():
+    global widgets
+    widgets = []
+
+    column_frames = [ttk.Frame(container_frame) for _ in range(3)]
+    for frame in column_frames:
+        # frame.pack_propagate(False)
+        frame.pack(side='left', padx=20)
+    for i, file_path in enumerate(uploaded_images):
+        row_widgets = [
+            ttk.Label(column_frames[0], text=f'{i + 1}- {file_path.split("/")[-1]}'),
+            ttk.Label(column_frames[1], text='progress information ...'),
+            ttk.Button(column_frames[2], text="Preview Image", command=lambda f=file_path: display_image(f))
+        ]
+        widgets.append(row_widgets)
+
+    for row_widgets in widgets:
+        for widget in row_widgets:
+            widget.pack(padx=5, pady=5)
+
+
+def change_label_value(index: int, text: str):
+    widgets[index][2].configure(text=text)
 
 
 def apply_operation(image, operation):
     if operation == "None":
         return image
-    elif operation == "gray":
+    elif operation == "Grayscale":
         return image.convert("L")
     elif operation == "Rotate 90°":
         return image.rotate(90)
 
 
 def apply_operation_and_display():
-    operation = selected_operation.get()
-    if uploaded_image:
-        global modified_image
-        modified_image = send_and_recieve_image(operation,file_path)
-        display_image(modified_image)
-        save_button.pack(pady=5)
+    ...
+    # operation = selected_operation.get()
+    # if uploaded_image:
+    #     global modified_image
+    #     modified_image = apply_operation(uploaded_image, operation)
+    #     display_image(modified_image)
+    #     save_button.pack(pady=5)
 
 
 def save_image():
-    if modified_image:
-        save_path = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("PNG files", "*.png"), ("JPG files", "*.jpg"), ("JPEG files", "*.jpeg")])
-        if save_path:
-            modified_image.save(save_path)
+    ...
+    # if modified_image:
+    #     save_path = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("PNG files", "*.png"), ("JPG files", "*.jpg"), ("JPEG files", "*.jpeg")])
+    #     if save_path:
+    #         modified_image.save(save_path)
 
+
+WIDTH = 1000
+HEIGHT = 550
+POS_X = 400
+POS_Y = 200
 
 root = tk.Tk()
-root.title("Photo Uploader")
-root.geometry("650x550")
+root.title("Distributed Computing Project")
+root.geometry(f"{WIDTH}x{HEIGHT}+{POS_X}+{POS_Y}")
+
 upload_button = ttk.Button(root, text="Upload Photo", command=open_file_dialog)
 upload_button.pack(pady=10)
 
 operation_frame = ttk.Frame(root)
+operation_frame.pack(pady=5)
+
 # operation_frame.pack(pady=5)
 
 operation_label = ttk.Label(operation_frame, text="Operation:")
 operation_label.pack(side="left", padx=10, pady=5)
 
-operations = ["None", "GrayScale","Invert", "Rotate 90°", "Edge Detection", "Increase Brightness"]
+operations = ["None", "Grayscale", "Rotate 90°"]
 selected_operation = tk.StringVar(root)
 selected_operation.set(operations[0])
 operation_menu = ttk.OptionMenu(operation_frame, selected_operation, *operations)
@@ -71,8 +147,11 @@ apply_button = ttk.Button(root, text="Apply Operation", command=apply_operation_
 # save or download image
 save_button = ttk.Button(root, text="Save Image", command=save_image)
 
+container_frame = ttk.Frame(root)
+container_frame.pack(pady=20)
 
 image_label = ttk.Label(root)
 image_label.pack()
 
-root.mainloop()
+if __name__ == '__main__':
+    root.mainloop()
