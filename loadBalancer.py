@@ -20,25 +20,25 @@ imagesReceived = []
 def timeout():
     print("I\'m Here")
     while True:
-        print("Slaves Statuses:",slaveStatus)
+        #print("Slaves Statuses:",slaveStatus)
         for sock in range(len(timeoutSockets)):
             if slaveStatus[sock] == None:  #No Connection Exists between load balancer and server
                 try:
                     timeoutSockets[sock].connect((slavesIPs[sock],timeoutPorts[sock])) #Try to connect
                     slaveStatus[sock] = True
                 except:
-                    print("Couldn\'t Connect") #Load Balancer Couldn't connect to Server, Keep its state = None
+                    #print("Couldn\'t Connect") #Load Balancer Couldn't connect to Server, Keep its state = None
                     continue
             try:
                 data = timeoutSockets[sock].recv(4096)
                 timeoutSockets[sock].send(b"K")
                 if not data:
-                    print("Client closed")
+                    #print("Client closed")
                     slaveStatus[sock] = None
                 else:
                     slaveStatus[sock] = True
             except TimeoutError as e:
-                print("Timed Out: ",e)
+                #print("Timed Out: ",e)
                 slaveStatus[sock] = False
             except IOError as e:
                 if e.errno == errno.EPIPE:
@@ -46,10 +46,11 @@ def timeout():
         #time.sleep(2)
 
 def process_request():
-    imagesNo = client.recv(1024)
+    imagesNo = int(client.recv(1024).decode())
     client.send(b"K")
-    op = client.recv(1024)
-    client.send("K") 
+    print("Images No is ",imagesNo)
+    op = client.recv(1024).decode()
+    client.send(b"K") 
     for i in range(imagesNo):
         imgSize = int(client.recv(1024).decode())
         imgData = b""
@@ -60,16 +61,13 @@ def process_request():
             data = client.recv(min(imgSize,4096))
             imgSize -= len(data)
             imgData+=data
-        imagesReceived.append((imgName, imgData))
- 
-    op = "Invert"
-    imagesNo = 2
+        imagesReceived.append([imgName, imgData])
     origImagesNo =imagesNo
     serverTaskSize = imagesNo / 3
     extraTasks = imagesNo % 3
     currImageIndex = 0
 
-    if extraTasks != 0:
+    while extraTasks != 0:
         i = -1
         for j in range(slavesNum):
             if slaveStatus[j] == True:
@@ -77,7 +75,11 @@ def process_request():
                 break
         if i == -1:
             print("All Servers are down, go somewhere else")
-
+            continue
+        try:
+            dataSockets[i].connect()
+        except:
+            pass
         dataSockets[i].send(str(extraTasks).encode())
         dataSockets[i].recv(1024)
         dataSockets[i].send(op.encode())
@@ -89,6 +91,7 @@ def process_request():
         for j in range(extraTasks):
             recv_image(dataSockets[i])
         imagesNo -= extraTasks
+        extraTasks = 0
     while imagesNo:
         for i in range(slavesNum):
             if slaveStatus[i] == True:
@@ -108,9 +111,10 @@ def process_request():
         file.write(imagesReceived[i][1])
 
     for _,image in imagesReceived:
-        client.send(len(image))
+        client.send(str(len(image)).encode())
         client.recv(1024)
         client.sendall(image)
+        print("Sent An Image to client")
 
     
 
@@ -177,7 +181,7 @@ timeoutThread.start()
 
 #imagesReceived.append(["Kalsen.png" , open("Kalsen.png","rb").read()])
 #imagesReceived.append(["smallKalsen.png" , open("smallKalsen.png","rb").read()])
-process_request()
+#process_request()
 
 
 clientThread.join()
