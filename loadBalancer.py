@@ -46,7 +46,7 @@ def timeout():
         #time.sleep(2)
 
 def process_request():
-    '''imagesNo = client.recv(1024)
+    imagesNo = client.recv(1024)
     client.send(b"K")
     op = client.recv(1024)
     client.send("K") 
@@ -60,7 +60,7 @@ def process_request():
             data = client.recv(min(imgSize,4096))
             imgSize -= len(data)
             imgData+=data
-        imagesReceived.append((imgName, imgData))'''
+        imagesReceived.append((imgName, imgData))
  
     op = "Invert"
     imagesNo = 2
@@ -106,6 +106,11 @@ def process_request():
     for i in range(origImagesNo):
         file = open(imagesReceived[i][0],"wb")
         file.write(imagesReceived[i][1])
+
+    for _,image in imagesReceived:
+        client.send(len(image))
+        client.recv(1024)
+        client.sendall(image)
 
     
 
@@ -162,18 +167,18 @@ for i in range(3):
         pass
     dataSockets.append(newSock)
 
-#server.listen(5)
-#client, addr = server.accept()
-#print("Connection Arrived From",addr)
+server.listen(5)
+client, addr = server.accept()
+print("Connection Arrived From",addr)
 timeoutThread = threading.Thread(target = timeout)
-#clientThread  = threading.Thread(target = process_request)
-#clientThread.start()
+clientThread  = threading.Thread(target = process_request)
+clientThread.start()
 timeoutThread.start()
 
-imagesReceived.append(["Kalsen.png" , open("Kalsen.png","rb").read()])
-imagesReceived.append(["smallKalsen.png" , open("smallKalsen.png","rb").read()])
-process_request()
+#imagesReceived.append(["Kalsen.png" , open("Kalsen.png","rb").read()])
+#imagesReceived.append(["smallKalsen.png" , open("smallKalsen.png","rb").read()])
 process_request()
 
-#clientThread.join()
+
+clientThread.join()
 timeoutThread.join()

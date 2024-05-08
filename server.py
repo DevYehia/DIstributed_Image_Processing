@@ -10,7 +10,7 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 timeOutSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 def timeoutRespond():
     while True:
-        timeOutResponseSocket.send(b"I am Online")
+        timeOutResponseSocket.send(b"K")
         timeOutResponseSocket.recv(1024)
 
 def getImage(img_size):
