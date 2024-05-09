@@ -102,10 +102,10 @@ while True:
         print("Image Size is",img_size)
         client.send(b"OK")
         img_data = getImage(img_size)
-        client.send(b"OK")
+        #client.send(b"OK")
         images[id] = (img_name,img_data)
         threads.append(threading.Thread(target = edit_image,args=(op,img_name,img_data)))
-    client.recv(1024)
+    #client.recv(1024)
     for thread in threads:
         thread.start()
 
@@ -118,6 +118,7 @@ while True:
         client.send(value[0].encode())
         client.recv(1024)
         send_image(value[0])
-        client.recv(1024)
+        #client.recv(1024)
     threads.clear()
+    images.clear()
 

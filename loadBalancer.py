@@ -63,7 +63,7 @@ def process_request():
             imgData+=data
         imagesReceived.append([imgName, imgData])
     origImagesNo =imagesNo
-    serverTaskSize = imagesNo / 3
+    serverTaskSize = imagesNo // 3
     extraTasks = imagesNo % 3
     currImageIndex = 0
 
@@ -87,7 +87,7 @@ def process_request():
         for j in range(extraTasks): 
             send_image(currImageIndex,dataSockets[i])
             currImageIndex+=1
-        dataSockets[i].send(b"OK")
+        #dataSockets[i].send(b"OK")
         for j in range(extraTasks):
             recv_image(dataSockets[i])
         imagesNo -= extraTasks
@@ -126,7 +126,7 @@ def send_image(index,server):
     server.send(str(len(imagesReceived[index][1])).encode())
     server.recv(1024)
     server.sendall(imagesReceived[index][1])
-    server.recv(1024)    
+    #server.recv(1024)    
     
 
 def recv_image(server):
@@ -142,7 +142,7 @@ def recv_image(server):
         new_img_size -= len(data)
         newImgData+=data
     imagesReceived[int(img_ID)][1] = newImgData
-    server.send(b"K")
+    #server.send(b"K")
 
 
 
