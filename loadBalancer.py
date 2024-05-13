@@ -7,7 +7,7 @@ maxSlaveCapacity = 3
 slavesNum = 3
 timeoutPorts = [1234,1235,1236]
 dataPorts = [2000,2001,2002]
-slavesIPs = ["51.20.85.5","ip2","ip3"]
+slavesIPs = ["16.171.154.129","ip2","ip3"]
 slaveStatus = [None,None,None]
 timeoutSockets= list()
 dataSockets = list()
@@ -50,12 +50,15 @@ def process_request():
     client.send(b"K")
     print("Images No is ",imagesNo)
     op = client.recv(1024).decode()
+    print("Operation is",op)
     client.send(b"K") 
     for i in range(imagesNo):
         imgSize = int(client.recv(1024).decode())
+        print("For Image No.",i,":\nSize =",imgSize)
         imgData = b""
         client.send(b"K")
         imgName = client.recv(1024).decode()
+        print("Name is",imgName)
         client.send(b"K")
         while imgSize:
             data = client.recv(min(imgSize,4096))
@@ -74,16 +77,20 @@ def process_request():
                 i = j
                 break
         if i == -1:
-            print("All Servers are down, go somewhere else")
+            #print("All Servers are down, go somewhere else")
             continue
+        print("Found Server No",i)
+        #time.sleep(1)
         try:
-            dataSockets[i].connect()
+            dataSockets[i].connect((slavesIPs[i],dataPorts[i]))
         except:
-            pass
+            print("Exception Hit")
+
         dataSockets[i].send(str(extraTasks).encode())
         dataSockets[i].recv(1024)
         dataSockets[i].send(op.encode())
         dataSockets[i].recv(1024)
+        print("Passed")
         for j in range(extraTasks): 
             send_image(currImageIndex,dataSockets[i])
             currImageIndex+=1
@@ -102,7 +109,7 @@ def process_request():
                 for j in range(serverTaskSize): 
                     send_image(currImageIndex,dataSockets[i])
                     currImageIndex+=1
-                dataSockets[i].send(b"OK")
+                #dataSockets[i].send(b"OK")
                 for j in range(serverTaskSize):
                     recv_image(dataSockets[i])
                 imagesNo -= serverTaskSize
@@ -131,10 +138,13 @@ def send_image(index,server):
 
 def recv_image(server):
     img_ID = server.recv(1024).decode()
+    print("ID Recieved is",img_ID)
     server.send(b"K")
     img_name = server.recv(1024).decode()
+    print("Name Recieved is",img_name)
     server.send(b"K")
     new_img_size = int(server.recv(1024).decode())
+    print("New Image Size is",new_img_size)
     server.send(b"K")
     newImgData = b""
     while new_img_size:
@@ -148,7 +158,7 @@ def recv_image(server):
 
 
 for i in range(3):
-    print("At i =",i)
+    #print("At i =",i)
     newSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     newSock.settimeout(3)
     try:
@@ -161,28 +171,25 @@ for i in range(3):
 print("Slaves Statuses:",slaveStatus)
 
 for i in range(3):
-    print("At i =",i)
+    #print("At i =",i)
     newSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        print("before Connection")
+        #print("before Connection")
         newSock.connect((slavesIPs[i],dataPorts[i]))
-        print("Connected Successfully")
+        #print("Connected Successfully")
     except:
         pass
     dataSockets.append(newSock)
-
+#timeoutThread = threading.Thread(target = timeout)
+#clientThread  = threading.Thread(target = process_request)
 server.listen(5)
 client, addr = server.accept()
-print("Connection Arrived From",addr)
-timeoutThread = threading.Thread(target = timeout)
-clientThread  = threading.Thread(target = process_request)
-clientThread.start()
-timeoutThread.start()
+while True:
+    timeoutThread = threading.Thread(target = timeout)
+    clientThread  = threading.Thread(target = process_request)
+   #print("Connection Arrived From",addr)
+    clientThread.start()
+    timeoutThread.start()
 
-#imagesReceived.append(["Kalsen.png" , open("Kalsen.png","rb").read()])
-#imagesReceived.append(["smallKalsen.png" , open("smallKalsen.png","rb").read()])
-#process_request()
-
-
-clientThread.join()
-timeoutThread.join()
+    clientThread.join()
+    imagesReceived.clear()
