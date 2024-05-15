@@ -37,6 +37,7 @@ def display_image(image_path):
 
 
 def display_images():
+
     global column_frames
     if len(column_frames) != 0:
         for frame in column_frames:
@@ -72,7 +73,7 @@ def apply_operation_and_display():
         server_images = applyImageOp(uploaded_images,operation)
         for row_widgets, image_path in zip(widgets, server_images):
             row_widgets[-1].configure(command=lambda f=image_path: display_image(f))
-        uploaded_images.clear()
+
 
 
 
