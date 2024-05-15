@@ -25,9 +25,9 @@ def timeout():
             if slaveStatus[sock] == None:  #No Connection Exists between load balancer and server
                 try:
                     timeoutSockets[sock].connect((slavesIPs[sock],timeoutPorts[sock])) #Try to connect
+                    dataSockets[sock].connect((slavesIPs[sock],dataPorts[sock]))                    
                     slaveStatus[sock] = True
                 except:
-                    #print("Couldn\'t Connect") #Load Balancer Couldn't connect to Server, Keep its state = None
                     continue
             try:
                 data = timeoutSockets[sock].recv(4096)
@@ -80,39 +80,45 @@ def process_request():
             #print("All Servers are down, go somewhere else")
             continue
         print("Found Server No",i)
-        #time.sleep(1)
-        try:
-            dataSockets[i].connect((slavesIPs[i],dataPorts[i]))
-        except:
-            print("Exception Hit")
 
-        dataSockets[i].send(str(extraTasks).encode())
-        dataSockets[i].recv(1024)
-        dataSockets[i].send(op.encode())
-        dataSockets[i].recv(1024)
-        print("Passed")
-        for j in range(extraTasks): 
-            send_image(currImageIndex,dataSockets[i])
-            currImageIndex+=1
-        #dataSockets[i].send(b"OK")
-        for j in range(extraTasks):
-            recv_image(dataSockets[i])
+        try:
+            dataSockets[i].send(str(extraTasks).encode())
+            dataSockets[i].recv(1024)
+            dataSockets[i].send(op.encode())
+            dataSockets[i].recv(1024)
+            print("Passed")
+            for j in range(extraTasks): 
+                send_image(currImageIndex,dataSockets[i])
+                currImageIndex+=1
+            #dataSockets[i].send(b"OK")
+            for j in range(extraTasks):
+                recv_image(dataSockets[i])
+        except:
+            print("Server ",i,"Failed")
+            slaveStatus[i] = None
+            continue
         imagesNo -= extraTasks
         extraTasks = 0
     while imagesNo:
         for i in range(slavesNum):
             if slaveStatus[i] == True:
-                dataSockets[i].send(str(serverTaskSize).encode())
-                dataSockets[i].recv(1024)
-                dataSockets[i].send(op.encode())
-                dataSockets[i].recv(1024)
-                for j in range(serverTaskSize): 
-                    send_image(currImageIndex,dataSockets[i])
-                    currImageIndex+=1
-                #dataSockets[i].send(b"OK")
-                for j in range(serverTaskSize):
-                    recv_image(dataSockets[i])
+                try:
+                    dataSockets[i].send(str(serverTaskSize).encode())
+                    dataSockets[i].recv(1024)
+                    dataSockets[i].send(op.encode())
+                    dataSockets[i].recv(1024)
+                    for j in range(serverTaskSize): 
+                        send_image(currImageIndex,dataSockets[i])
+                        currImageIndex+=1
+
+                    for j in range(serverTaskSize):
+                        recv_image(dataSockets[i])
+                except:
+                    print("Server",i,"Failed")
+                    slaveStatus[i] = None
+                    continue
                 imagesNo -= serverTaskSize
+
     for i in range(origImagesNo):
         file = open(imagesReceived[i][0],"wb")
         file.write(imagesReceived[i][1])
@@ -133,7 +139,7 @@ def send_image(index,server):
     server.send(str(len(imagesReceived[index][1])).encode())
     server.recv(1024)
     server.sendall(imagesReceived[index][1])
-    #server.recv(1024)    
+  
     
 
 def recv_image(server):
@@ -152,13 +158,12 @@ def recv_image(server):
         new_img_size -= len(data)
         newImgData+=data
     imagesReceived[int(img_ID)][1] = newImgData
-    #server.send(b"K")
+
 
 
 
 
 for i in range(3):
-    #print("At i =",i)
     newSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     newSock.settimeout(3)
     try:
@@ -174,22 +179,19 @@ for i in range(3):
     #print("At i =",i)
     newSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        #print("before Connection")
         newSock.connect((slavesIPs[i],dataPorts[i]))
-        #print("Connected Successfully")
+
     except:
         pass
     dataSockets.append(newSock)
-#timeoutThread = threading.Thread(target = timeout)
-#clientThread  = threading.Thread(target = process_request)
+
 server.listen(5)
 client, addr = server.accept()
+timeoutThread = threading.Thread(target = timeout)
+timeoutThread.start()
 while True:
-    timeoutThread = threading.Thread(target = timeout)
-    clientThread  = threading.Thread(target = process_request)
-   #print("Connection Arrived From",addr)
-    clientThread.start()
-    timeoutThread.start()
 
+    clientThread  = threading.Thread(target = process_request)
+    clientThread.start()
     clientThread.join()
     imagesReceived.clear()

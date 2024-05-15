@@ -10,7 +10,7 @@ def connectToLB():
     global connected
     if not connected:
         connected = True
-        client.connect(("13.60.84.107", 1237))   
+        client.connect(("51.20.8.142", 1237))   
 
 def send_images_number(imagesNo):
     client.send(str(imagesNo).encode())

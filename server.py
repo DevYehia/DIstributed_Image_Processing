@@ -61,8 +61,7 @@ def edit_image(operation, img_name, img_data):
         new_img = invert_photo(org_img)
     elif operation == "Rotate 90°":
         new_img = rotate(org_img)
-    elif operation == "Edge Detection":
-        new_img = edges(org_img)
+
 
     cv2.imwrite("new" + img_name, new_img)
 
@@ -118,7 +117,7 @@ while True:
         client.send(value[0].encode())
         client.recv(1024)
         send_image(value[0])
-        #client.recv(1024)
+ 
     threads.clear()
     images.clear()
 
