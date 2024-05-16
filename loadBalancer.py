@@ -7,7 +7,7 @@ maxSlaveCapacity = 3
 slavesNum = 3
 timeoutPorts = [1234,1235,1236]
 dataPorts = [2000,2001,2002]
-slavesIPs = ["16.171.154.129","ip2","ip3"]
+slavesIPs = ["16.171.133.158","ip2","ip3"]
 slaveStatus = [None,None,None]
 timeoutSockets= list()
 dataSockets = list()
@@ -82,13 +82,14 @@ def process_request():
         print("Found Server No",i)
 
         try:
+
             dataSockets[i].send(str(extraTasks).encode())
             dataSockets[i].recv(1024)
             dataSockets[i].send(op.encode())
             dataSockets[i].recv(1024)
             print("Passed")
             for j in range(extraTasks): 
-                send_image(currImageIndex,dataSockets[i])
+                send_image(currImageIndex,dataSockets[i],i)
                 currImageIndex+=1
             #dataSockets[i].send(b"OK")
             for j in range(extraTasks):
@@ -108,7 +109,7 @@ def process_request():
                     dataSockets[i].send(op.encode())
                     dataSockets[i].recv(1024)
                     for j in range(serverTaskSize): 
-                        send_image(currImageIndex,dataSockets[i])
+                        send_image(currImageIndex,dataSockets[i],i)
                         currImageIndex+=1
 
                     for j in range(serverTaskSize):
@@ -118,7 +119,8 @@ def process_request():
                     slaveStatus[i] = None
                     continue
                 imagesNo -= serverTaskSize
-
+    client.send("Done 0 0".encode())
+    client.recv(1024)
     for i in range(origImagesNo):
         file = open(imagesReceived[i][0],"wb")
         file.write(imagesReceived[i][1])
@@ -131,9 +133,13 @@ def process_request():
 
     
 
-def send_image(index,server):
+def send_image(index,server,serverNo):
     server.send(str(index).encode())
     server.recv(1024)
+    
+    client.send(("Start "+ str(serverNo) + " " + str(index)).encode())
+    #print("Sent Change to client")
+    client.recv(1024)
     server.send(imagesReceived[index][0].encode())
     server.recv(1024)
     server.send(str(len(imagesReceived[index][1])).encode())
@@ -157,6 +163,8 @@ def recv_image(server):
         data = server.recv(min(new_img_size,4096))
         new_img_size -= len(data)
         newImgData+=data
+    client.send(("End 0 "+str(img_ID)).encode())
+    client.recv(1024)
     imagesReceived[int(img_ID)][1] = newImgData
 
 
