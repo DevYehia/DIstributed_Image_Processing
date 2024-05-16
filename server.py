@@ -79,12 +79,24 @@ def edit_image(operation, img_name, img_data):
         new_img = invert_photo(org_img)
     elif operation == "Rotate 90°":
         new_img = rotate(org_img)
+    elif operation == "Contrast":
+        new_img = increase_contrast(org_img)
+    elif operation == "Reflect":  
+        new_img = reflect(org_img)
+    elif operation == "Brighten":
+        new_img = brighten(org_img)
+    elif operation == "Darken":
+        new_img = darken(org_img)
 
     new_img_second_half = comm.recv(source=1,tag=11)
-    if operation != "Rotate 90°":    
-        new_img = cv2.hconcat([new_img,new_img_second_half])
-    else:
+
+    if operation == "Rotate 90°":
         new_img = cv2.vconcat([new_img,new_img_second_half])
+    elif operation == "Reflect":
+        new_img = cv2.hconcat([new_img_second_half,new_img])        
+    else:   
+        new_img = cv2.hconcat([new_img,new_img_second_half])
+
     #cv2.imwrite("new" + img_name.split(".")[0] + "1." + img_name.split(".")[1], new_img)
     #cv2.imwrite("new" + img_name.split(".")[0] + "2." + img_name.split(".")[1], new_img_second_half)
     cv2.imwrite("new" +img_name, new_img)
@@ -163,6 +175,13 @@ elif rank == 1:
             new_img = invert_photo(org_img)
         elif operation == "Rotate 90°":
             new_img = rotate(org_img)
-
+        elif operation == "Contrast":
+            new_img = increase_contrast(org_img)
+        elif operation == "Threshold":  
+            new_img = binary(org_img)
+        elif operation == "Brighten":
+            new_img = brighten(org_img)
+        elif operation == "Darken":
+            new_img = darken(org_img)
         comm.send(new_img,dest=0,tag=11)
 
