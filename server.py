@@ -79,8 +79,8 @@ def edit_image(operation, img_name, img_data):
         new_img = invert_photo(org_img)
     elif operation == "Rotate 90°":
         new_img = rotate(org_img)
-    elif operation == "Contrast":
-        new_img = increase_contrast(org_img)
+    elif operation == "Corners":
+        new_img = corners(org_img)
     elif operation == "Reflect":  
         new_img = reflect(org_img)
     elif operation == "Brighten":
@@ -175,10 +175,10 @@ elif rank == 1:
             new_img = invert_photo(org_img)
         elif operation == "Rotate 90°":
             new_img = rotate(org_img)
-        elif operation == "Contrast":
-            new_img = increase_contrast(org_img)
-        elif operation == "Threshold":  
-            new_img = binary(org_img)
+        elif operation == "Corners":
+            new_img = corners(org_img)
+        elif operation == "Reflect":  
+            new_img = reflect(org_img)
         elif operation == "Brighten":
             new_img = brighten(org_img)
         elif operation == "Darken":
