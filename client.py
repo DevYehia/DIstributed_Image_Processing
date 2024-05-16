@@ -4,7 +4,7 @@ import socket
 from PIL import Image
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 connected = False
-
+labels = None
 
 def connectToLB():
     global connected
@@ -29,8 +29,25 @@ def applyImageOp(img_paths,operation):
     images = []
     for i in range(imagesNo):
         send_image(img_paths[i])
+        labels[i].configure(text = "Sent Image To LB")
+    while True:
+        labelCommand = client.recv(1024).decode()
+        print("Recieved Command",labelCommand)
+        status = labelCommand.split(" ")[0]
+        serverNo = labelCommand.split(" ")[1]        
+        imageNo = int(labelCommand.split(" ")[2])
+        client.send(b"OK")
+        if status == "Start":
+            labels[imageNo].configure(text = "Started Processing at server "+serverNo)
+        elif status == "End":
+            labels[imageNo].configure(text = "Finished Processing")      
+        elif status == "Fail":
+            labels[imageNo].configure(text = "Failed Processing, Retrying...")
+        elif status == "Done":
+            break        
     for i in range(imagesNo):
         images.append(recv_image(img_names[i]))
+        labels[i].configure(text = "Image Done✅")
     return images
 
 # Specify the operation and image file details
@@ -66,7 +83,13 @@ def recv_image(image_name):
     img.close()
     return "new" + image_name
 
+def setLabels(progressLabels):
+    global labels
+    labels = progressLabels
+
+
+
 if __name__ == '__main__':
     op = "Invert"
-
-    applyImageOp(["Kalsen.png","smallKalsen.png"],op)
+    print(("hello" + str(1)).encode())
+    #applyImageOp(["Kalsen.png","smallKalsen.png"],op)

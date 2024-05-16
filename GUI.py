@@ -3,7 +3,8 @@ from tkinter import filedialog
 from tkinter import ttk
 from PIL import Image, ImageTk
 from client import *
-
+import threading
+progressLabels = []
 widgets = []
 column_frames = []
 def open_file_dialog():
@@ -37,7 +38,7 @@ def display_image(image_path):
 
 
 def display_images():
-
+    progressLabels.clear()
     global column_frames
     if len(column_frames) != 0:
         for frame in column_frames:
@@ -47,9 +48,11 @@ def display_images():
         # frame.pack_propagate(False)
         frame.pack(side='left', padx=20)
     for i, file_path in enumerate(uploaded_images):
+        label = ttk.Label(column_frames[1], text='progress information ...')
+        progressLabels.append(label)
         row_widgets = [
             ttk.Label(column_frames[0], text=f'{i + 1}- {file_path.split("/")[-1]}'),
-            ttk.Label(column_frames[1], text='progress information ...'),
+            label,
             ttk.Button(column_frames[2], text="Preview Image", command=lambda f=file_path: display_image(f))
         ]
         widgets.append(row_widgets)
@@ -63,7 +66,9 @@ def change_label_value(index: int, text: str):
     widgets[index][2].configure(text=text)
 
 
-
+def startImageThread():
+    thread = threading.Thread(target = apply_operation_and_display)
+    thread.start()
 
 def apply_operation_and_display():
     ...
@@ -74,7 +79,8 @@ def apply_operation_and_display():
         for row_widgets, image_path in zip(widgets, server_images):
             row_widgets[-1].configure(command=lambda f=image_path: display_image(f))
 
-
+def returnLabels():
+    return progressLabels
 
 
 
@@ -112,7 +118,7 @@ selected_operation.set(operations[0])
 operation_menu = ttk.OptionMenu(operation_frame, selected_operation, *operations)
 operation_menu.pack(side="left", padx=5, pady=5)
 
-apply_button = ttk.Button(root, text="Apply Operation", command=apply_operation_and_display)
+apply_button = ttk.Button(root, text="Apply Operation", command=startImageThread)
 # apply_button.pack(pady=5)
 
 # save or download image
@@ -124,5 +130,6 @@ container_frame.pack(pady=20)
 image_label = ttk.Label(root)
 image_label.pack(pady=20)
 
+setLabels(progressLabels)
 if __name__ == '__main__':
     root.mainloop()
