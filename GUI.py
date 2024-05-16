@@ -1,4 +1,5 @@
 import tkinter as tk
+import ctypes
 from tkinter import filedialog
 from tkinter import ttk
 from PIL import Image, ImageTk
@@ -86,6 +87,7 @@ def save_image():
     #         modified_image.save(save_path)
 
 
+
 WIDTH = 1000
 HEIGHT = 650
 POS_X = 400
@@ -93,7 +95,30 @@ POS_Y = 200
 
 root = tk.Tk()
 root.title("Distributed Computing Project")
+#Icons added to the window
+icon = tk.PhotoImage(file="distributed_icon2.png")
+# Set it as the window icon.
+root.iconphoto(True, icon)
+
+# icon at taskbar
+myappid = 'anystringssss'  # arbitrary string
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
 root.geometry(f"{WIDTH}x{HEIGHT}+{POS_X}+{POS_Y}")
+
+#Progress bar
+my_progress = ttk.Progressbar(root, orient=tk.HORIZONTAL, length=300, mode='determinate')
+my_progress.pack(pady=20)
+'''
+my_progress['value'] += 25                      ---> this is for increasing the progress bar
+progress_label.config(text=my_progress["value"])      ---> this is for changing the label text as progress bar increases
+'''
+#Label
+progress_label = ttk.Label(root, text='')
+progress_label.pack(pady=20)
+
+
+
 
 upload_button = ttk.Button(root, text="Upload Photo", command=open_file_dialog)
 upload_button.pack(pady=10)
