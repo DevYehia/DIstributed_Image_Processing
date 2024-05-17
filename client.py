@@ -5,7 +5,7 @@ from PIL import Image
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 connected = False
 labels = None
-
+bars = None
 def connectToLB():
     global connected
     if not connected:
@@ -30,6 +30,7 @@ def applyImageOp(img_paths,operation):
     for i in range(imagesNo):
         send_image(img_paths[i])
         labels[i].configure(text = "Sent Image To LB")
+        bars[i]['value'] +=25
     while True:
         labelCommand = client.recv(1024).decode()
         print("Recieved Command",labelCommand)
@@ -39,8 +40,10 @@ def applyImageOp(img_paths,operation):
         client.send(b"OK")
         if status == "Start":
             labels[imageNo].configure(text = "Started Processing at server "+serverNo)
+            bars[imageNo]['value'] += 25
         elif status == "End":
-            labels[imageNo].configure(text = "Finished Processing")      
+            labels[imageNo].configure(text = "Finished Processing")
+            bars[imageNo]['value'] += 25      
         elif status == "Fail":
             labels[imageNo].configure(text = "Failed Processing, Retrying...")
         elif status == "Done":
@@ -48,6 +51,7 @@ def applyImageOp(img_paths,operation):
     for i in range(imagesNo):
         images.append(recv_image(img_names[i]))
         labels[i].configure(text = "Image Done✅")
+        bars[i]['value'] += 25
     return images
 
 # Specify the operation and image file details
@@ -87,6 +91,9 @@ def setLabels(progressLabels):
     global labels
     labels = progressLabels
 
+def setBars(progressBars):
+    global bars
+    bars = progressBars
 
 
 if __name__ == '__main__':

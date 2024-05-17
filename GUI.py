@@ -6,6 +6,7 @@ from PIL import Image, ImageTk
 from client import *
 import threading
 progressLabels = []
+progressBars = []
 widgets = []
 column_frames = []
 def open_file_dialog():
@@ -40,21 +41,25 @@ def display_image(image_path):
 
 def display_images():
     progressLabels.clear()
+    progressBars.clear()
     global column_frames
     if len(column_frames) != 0:
         for frame in column_frames:
             frame.destroy()
-    column_frames = [ttk.Frame(container_frame) for _ in range(3)]
+    column_frames = [ttk.Frame(container_frame) for _ in range(4)]
     for frame in column_frames:
         # frame.pack_propagate(False)
         frame.pack(side='left', padx=20)
     for i, file_path in enumerate(uploaded_images):
         label = ttk.Label(column_frames[1], text='progress information ...')
+        progressBar = ttk.Progressbar(column_frames[2], orient=tk.HORIZONTAL, length=200, mode='determinate')
         progressLabels.append(label)
+        progressBars.append(progressBar)
         row_widgets = [
             ttk.Label(column_frames[0], text=f'{i + 1}- {file_path.split("/")[-1]}'),
             label,
-            ttk.Button(column_frames[2], text="Preview Image", command=lambda f=file_path: display_image(f))
+            progressBar,
+            ttk.Button(column_frames[3], text="Preview Image", command=lambda f=file_path: display_image(f))
         ]
         widgets.append(row_widgets)
 
@@ -113,8 +118,8 @@ ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 root.geometry(f"{WIDTH}x{HEIGHT}+{POS_X}+{POS_Y}")
 
 #Progress bar
-my_progress = ttk.Progressbar(root, orient=tk.HORIZONTAL, length=300, mode='determinate')
-my_progress.pack(pady=20)
+# my_progress = ttk.Progressbar(root, orient=tk.HORIZONTAL, length=300, mode='determinate')
+# my_progress.pack(pady=20)
 '''
 my_progress['value'] += 25                      ---> this is for increasing the progress bar
 progress_label.config(text=my_progress["value"])      ---> this is for changing the label text as progress bar increases
@@ -137,7 +142,7 @@ operation_frame.pack(pady=5)
 operation_label = ttk.Label(operation_frame, text="Operation:")
 operation_label.pack(side="left", padx=10, pady=5)
 
-operations = ["None", "GrayScale", "Rotate 90°", "Invert","Edge Detection","Corners","Reflect","Brighten","Darken"]
+operations = ["GrayScale", "Rotate 90°", "Invert","Edge Detection","Corners","Reflect","Brighten","Darken"]
 selected_operation = tk.StringVar(root)
 selected_operation.set(operations[0])
 operation_menu = ttk.OptionMenu(operation_frame, selected_operation, *operations)
@@ -156,5 +161,7 @@ image_label = ttk.Label(root)
 image_label.pack(pady=20)
 
 setLabels(progressLabels)
+setBars(progressBars)
+
 if __name__ == '__main__':
     root.mainloop()
