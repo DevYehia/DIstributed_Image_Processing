@@ -73,6 +73,8 @@ def change_label_value(index: int, text: str):
 
 
 def startImageThread():
+    for bar in progressBars:
+        bar['value'] = 0
     thread = threading.Thread(target = apply_operation_and_display)
     thread.start()
 
@@ -142,7 +144,7 @@ operation_frame.pack(pady=5)
 operation_label = ttk.Label(operation_frame, text="Operation:")
 operation_label.pack(side="left", padx=10, pady=5)
 
-operations = ["GrayScale", "Rotate 90°", "Invert","Edge Detection","Corners","Reflect","Brighten","Darken"]
+operations = ["GrayScale","GrayScale", "Rotate 90°", "Invert","Edge Detection","Corners","Reflect","Brighten","Darken"]
 selected_operation = tk.StringVar(root)
 selected_operation.set(operations[0])
 operation_menu = ttk.OptionMenu(operation_frame, selected_operation, *operations)
