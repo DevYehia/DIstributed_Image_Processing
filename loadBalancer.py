@@ -6,20 +6,29 @@ import numpy as np
 import cv2
 import atexit
 
-maxSlaveCapacity = 3
-slavesNum = 3
-timeoutPorts = [1234,1235,1236]
-dataPorts = [2000,2001,2002]
+
+slavesNum = 3  # Max number of servers the load balancer can communicate to
+timeoutPorts = [1234,1235,1236]  # Ports for each timeout 
+dataPorts = [2000,2001,2002]    
 slavesIPs = ["16.171.133.158","ip2","ip3"]
-slaveStatus = [None,None,None]
+
+#Status of each Machine
+'''
+None ---> Machine is Down
+False ---> Machine took too long to respond
+True ---> Machine is up and running
+
+'''
+slaveStatus = [None,None,None]  
 timeoutSockets= list()
 dataSockets = list()
+
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind(("0.0.0.0", 1237))
+server.bind(("0.0.0.0", 1237)) #socket that the client will connect to
 
-imagesReceived = []
+imagesReceived = []  #Array that will store list of [img_name,img_bytes]
 
-
+#Timeout Function that will continously check on the health of the servers
 def timeout():
     print("I\'m Here")
     while True:
@@ -35,20 +44,20 @@ def timeout():
             try:
                 data = timeoutSockets[sock].recv(4096)
                 timeoutSockets[sock].send(b"K")
-                if not data:
-                    #print("Client closed")
-                    slaveStatus[sock] = None
+                if not data:  #Socket Closed
+                    slaveStatus[sock] = None  
                 else:
                     slaveStatus[sock] = True
             except TimeoutError as e:
-                #print("Timed Out: ",e)
                 slaveStatus[sock] = False
             except IOError as e:
                 if e.errno == errno.EPIPE:
                     slaveStatus[sock] = None
         #time.sleep(2)
 
+#the main function that gets called when the client uploads his images
 def process_request():
+
     global imagesReceived
     imagesNo = int(client.recv(1024).decode())
     client.send(b"K")
@@ -70,14 +79,17 @@ def process_request():
             imgData+=data
         imagesReceived.append([imgName, imgData])
     origImagesNo =imagesNo
-    serverTaskSize = imagesNo // 3
-    extraTasks = imagesNo % 3
-    currImageIndex = 0
-    isOneImage = False
+    serverTaskSize = imagesNo // 3  #Will be distributed to each server available
+    extraTasks = imagesNo % 3       #Will be handled by one available server
+    currImageIndex = 0              #Current image being processed
+    isOneImage = False 
     print("----------Sending to Server-----------")
+
     if extraTasks == 1 and serverTaskSize == 0: #One image case: Divide image into three fragments
+
         isOneImage = True
-        extraTasks = 0
+
+        #Convert to cv2 image to split it
         image_array = np.frombuffer(imagesReceived[0][1], dtype=np.uint8)
         org_img = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
         h, w, channels = org_img.shape
@@ -85,27 +97,36 @@ def process_request():
         imageName = imagesReceived[0][0]
         extension = imageName.split(".")[1]
         nameNoExt = imageName.split(".")[0]
+
+        #Save the each splitted image
         imageFragmentsData = [org_img[:,:third],org_img[:,third:third*2],org_img[:,third*2:]]
         imagesReceived = []
+
+        #Now we have three images not one
+        extraTasks = 0
         serverTaskSize = 1
-        imagesNo = 3  #Tell the load balancer that there is now three images not one
+        imagesNo = 3 
+
+        #Put the three fragments now as three seperate images
+        #Each one will have a name: original_name + fragmentIndex
         for fragmentIndex in range(len(imageFragmentsData)):
             _, encoded = cv2.imencode("." +extension,imageFragmentsData[fragmentIndex])
             imagesReceived.append([nameNoExt+str(fragmentIndex)+"."+extension,encoded.tobytes()])
         
+
+    
     while extraTasks != 0:
         i = -1
-        for j in range(slavesNum):
+        for j in range(slavesNum):  #Find a working server
             if slaveStatus[j] == True:
                 i = j
                 break
-        if i == -1:
+        if i == -1:  #All Servers Down
             #print("All Servers are down, go somewhere else")
             continue
         print("Found Server No",i)
 
         try:
-            #Code to distribute one image accross servers
             dataSockets[i].send(str(extraTasks).encode())
             dataSockets[i].recv(1024)
             dataSockets[i].send(op.encode())
@@ -117,15 +138,16 @@ def process_request():
             #dataSockets[i].send(b"OK")
             for j in range(extraTasks):
                 recv_image(dataSockets[i],isOneImage)
-        except:
+        except:  #Something Wrong happened, Declare server status as None and try with another server
             print("Server ",i,"Failed")
             slaveStatus[i] = None
             continue
         imagesNo -= extraTasks
         extraTasks = 0
+
     while imagesNo:
         for i in range(slavesNum):
-            if slaveStatus[i] == True:
+            if slaveStatus[i] == True:  #Working server found
                 try:
                     dataSockets[i].send(str(serverTaskSize).encode())
                     dataSockets[i].recv(1024)
@@ -137,35 +159,51 @@ def process_request():
 
                     for j in range(serverTaskSize):
                         recv_image(dataSockets[i],isOneImage)
-                except:
+                except: #Something Wrong happened, Declare server status as None and try with another server
                     #print(e)
                     print("Server",i,"Failed")
                     slaveStatus[i] = None
                     continue
                 imagesNo -= serverTaskSize
+
+    #Send Confirmation to client that processing is done, and now images will be sent
     client.send("Done 0 0".encode())
     client.recv(1024)
+
     print("-------------Finished Receiving from server------------")
+
+
     if isOneImage: #One image case : Merge Image Parts
+
+        #Convert first third to cv2 image to merge it
         img_in_bytes = imagesReceived[0][1] # Get First Third Of the Image
         image_array = np.frombuffer(img_in_bytes, dtype=np.uint8)
         new_img = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+
+
         for i in range(1,3):
+
+            #Convert the fragment to cv2
             image_array = np.frombuffer(imagesReceived[i][1], dtype=np.uint8)
             imageFragment = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+
+            #Merge the Image
             if op == "Rotate 90°":
                 new_img = cv2.vconcat([new_img,imageFragment])
             elif op == "Reflect":
                 new_img = cv2.hconcat([imageFragment,new_img])        
             else:   
                 new_img = cv2.hconcat([new_img,imageFragment])
+
         imageName = imagesReceived[0][0]
         extension = imageName.split(".")[1]
         nameNoExt = imageName.split(".")[0]
+
+        #Convert Merged Image back to bytes and save it
         _ , encoded = cv2.imencode("." + extension,new_img)
         imagesReceived = [[nameNoExt[:len(nameNoExt) - 1]+"."+extension,encoded.tobytes()]]
 
-
+    #Send images to client by the order they were received in
     for _,image in imagesReceived:
         client.send(str(len(image)).encode())
         client.recv(1024)
@@ -222,12 +260,13 @@ def recv_image(server,isOneImage):
             oneImageEndUpdate = True
     imagesReceived[int(img_ID)][1] = newImgData
 
-
+#Close Socket When Crashing
 def close_socket():
     client.close()
-
 atexit.register(close_socket)
-for i in range(3):
+
+#Create Timeout Sockets
+for i in range(slavesNum):
     newSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     newSock.settimeout(3)
     try:
@@ -239,7 +278,8 @@ for i in range(3):
 
 print("Slaves Statuses:",slaveStatus)
 
-for i in range(3):
+#Create Data Sockets
+for i in range(slavesNum):
     #print("At i =",i)
     newSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
