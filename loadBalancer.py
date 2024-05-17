@@ -8,9 +8,9 @@ import atexit
 
 
 slavesNum = 3  # Max number of servers the load balancer can communicate to
-timeoutPorts = [1234,1235,1236]  # Ports for each timeout 
-dataPorts = [2000,2001,2002]    
-slavesIPs = ["16.171.133.158","ip2","ip3"]
+timeoutPorts = [1234,1234,1234]  # Ports for each timeout 
+dataPorts = [2000,2000,2000]    
+slavesIPs = ["16.171.133.158","51.20.2.218","13.60.64.240"]
 
 #Status of each Machine
 '''
@@ -133,8 +133,8 @@ def process_request():
             dataSockets[i].recv(1024)
         #print("Passed")
             for j in range(extraTasks): 
-                send_image(currImageIndex,dataSockets[i],i,isOneImage)
-                currImageIndex+=1
+                send_image(currImageIndex + j,dataSockets[i],i,isOneImage)
+                
             #dataSockets[i].send(b"OK")
             for j in range(extraTasks):
                 recv_image(dataSockets[i],isOneImage)
@@ -142,10 +142,11 @@ def process_request():
             print("Server ",i,"Failed")
             slaveStatus[i] = None
             continue
+        currImageIndex+=extraTasks
         imagesNo -= extraTasks
         extraTasks = 0
 
-    while imagesNo:
+    while imagesNo != 0:
         for i in range(slavesNum):
             if slaveStatus[i] == True:  #Working server found
                 try:
@@ -154,8 +155,8 @@ def process_request():
                     dataSockets[i].send(op.encode())
                     dataSockets[i].recv(1024)
                     for j in range(serverTaskSize): 
-                        send_image(currImageIndex,dataSockets[i],i,isOneImage)
-                        currImageIndex+=1
+                        send_image(currImageIndex + j,dataSockets[i],i,isOneImage)
+                        
 
                     for j in range(serverTaskSize):
                         recv_image(dataSockets[i],isOneImage)
@@ -164,7 +165,10 @@ def process_request():
                     print("Server",i,"Failed")
                     slaveStatus[i] = None
                     continue
+                currImageIndex+=serverTaskSize
                 imagesNo -= serverTaskSize
+            if(imagesNo == 0):
+                break
 
     #Send Confirmation to client that processing is done, and now images will be sent
     client.send("Done 0 0".encode())
