@@ -6,7 +6,7 @@ import sys
 import os
 
 
-# Determine the parent directory of operations.py
+# Determine the parent directory of client.py
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 # Add the parent directory to the system path
