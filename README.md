@@ -1,8 +1,8 @@
-# DIstributed_Image_Processing
+# Distributed_Image_Processing
 
 ## Description
 
-DIstributed_Image_Processing is a project that aims to implement distributed image processing algorithms.
+Distributed_Image_Processing is a project that aims to implement an application that the user uses to apply different image operations on his images. The System always to take the images and distribute them to multiple machines using aa load balancer.
 
 ## Installation
 
@@ -16,9 +16,9 @@ DIstributed_Image_Processing is a project that aims to implement distributed ima
 
 3. Change the IP addresses of the 3 instances in `loadBalancer.py` in the following list: `slavesIP`
 
-4. make sure to have the following libraries for the GUI and client to run successfully: PIL and tkinter.
+4. Make sure to have the following libraries for the GUI and client to run successfully: PIL and tkinter.
 
-5. make sure to have the following libraries for the loadBalncer: numpy and cv2
+5. Make sure to have the following libraries for the loadBalncer: numpy and cv2
 
 ## Usage
 
@@ -33,4 +33,4 @@ This project is licensed under the [ASU License]().
 
 ## Contact
 
-For any questions or feedback, feel free to reach out to us at [Yehia Hasan](mailto:20P1043@eng.asu.edu.e) or [Mohamed Ayman](mailto:20P9260@eng.asu.edu.e) or [Kerolos Noshy](mailto:21P0132@eng.asu.edu.e) or [Ismail Ahmed](mailto:20P8233@eng.asu.edu.e).
+For any questions or feedback, feel free to reach out to us at [Yehia Hasan](https://github.com/DevYehia) or [Mohamed Ayman](https://github.com/M0hAyman) or [Kerolos Noshy](https://github.com/Kerolos-Noshy) or [Ismail Ahmed](https://github.com/Ismailseddik).
