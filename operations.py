@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
+
 
 #Edge Detection Function
 def edges(img):

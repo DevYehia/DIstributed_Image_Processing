@@ -119,20 +119,6 @@ ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
 root.geometry(f"{WIDTH}x{HEIGHT}+{POS_X}+{POS_Y}")
 
-#Progress bar
-# my_progress = ttk.Progressbar(root, orient=tk.HORIZONTAL, length=300, mode='determinate')
-# my_progress.pack(pady=20)
-'''
-my_progress['value'] += 25                      ---> this is for increasing the progress bar
-progress_label.config(text=my_progress["value"])      ---> this is for changing the label text as progress bar increases
-'''
-#Label
-progress_label = ttk.Label(root, text='')
-progress_label.pack(pady=20)
-
-
-
-
 upload_button = ttk.Button(root, text="Upload Photo", command=open_file_dialog)
 upload_button.pack(pady=10)
 
